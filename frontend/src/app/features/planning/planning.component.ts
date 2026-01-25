@@ -2,595 +2,462 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DashboardService, CameraService } from '../../core/services';
-import { Planning, Camera, Prenotazione, StatoPrenotazione } from '../../core/models';
-
-interface CellData {
-  prenotazione: Prenotazione | null;
-  isStart: boolean;
-  isEnd: boolean;
-  isContinuation: boolean;
-}
+import { Planning, Camera, Prenotazione } from '../../core/models';
 
 @Component({
   selector: 'app-planning',
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="planning-container">
-      <div class="page-header">
-        <h1 class="page-title">Planning</h1>
-        <div class="header-actions">
-          <div class="date-navigation">
-            <button class="btn btn-secondary" (click)="settimanaPrec()">
-              &#9664; Precedente
-            </button>
-            <button class="btn btn-outline" (click)="vaiAOggi()">Oggi</button>
-            <button class="btn btn-secondary" (click)="settimanaSucc()">
-              Successiva &#9654;
-            </button>
-          </div>
-          <div class="period-info">
-            {{ dataInizio | date:'d MMM' }} - {{ dataFine | date:'d MMM yyyy' }}
-          </div>
+    <div class="container">
+      <!-- Intestazione -->
+      <div class="header">
+        <div class="header-left">
+          <h1>📅 Planning Camere</h1>
+          <p class="subtitle">Visualizza le prenotazioni per camera e data</p>
+        </div>
+        <div class="header-right">
+          <button class="btn" (click)="settimanaPrec()">◀ Indietro</button>
+          <button class="btn btn-primary" (click)="vaiAOggi()">Oggi</button>
+          <button class="btn" (click)="settimanaSucc()">Avanti ▶</button>
         </div>
       </div>
 
-      @if (loading) {
-        <div class="loading-container">
-          <div class="spinner"></div>
-        </div>
-      } @else if (error) {
-        <div class="alert alert-error">{{ error }}</div>
-      } @else {
-        <!-- Legenda -->
-        <div class="legend">
-          <div class="legend-section">
-            <span class="legend-title">Stato prenotazione:</span>
-            <div class="legend-items">
-              <div class="legend-item">
-                <span class="legend-color legend-confermata"></span>
-                <span>Confermata (attesa arrivo)</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-color legend-in_corso"></span>
-                <span>In corso (ospite presente)</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-color legend-completata"></span>
-                <span>Completata</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-color legend-cancellata"></span>
-                <span>Cancellata</span>
-              </div>
-            </div>
-          </div>
-          <div class="legend-section">
-            <span class="legend-title">Simboli:</span>
-            <div class="legend-items">
-              <div class="legend-item">
-                <span class="legend-symbol">▶</span>
-                <span>Inizio prenotazione (check-in)</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-symbol">◀</span>
-                <span>Fine prenotazione (ultimo giorno)</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-symbol legend-empty">+</span>
-                <span>Cella libera (clicca per prenotare)</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Periodo visualizzato -->
+      <div class="periodo">
+        Periodo: <strong>{{ dataInizio | date:'d MMMM yyyy' }}</strong> → <strong>{{ dataFine | date:'d MMMM yyyy' }}</strong>
+      </div>
 
-        <!-- Griglia Planning -->
-        <div class="planning-grid-wrapper">
-          <table class="planning-grid">
-            <thead>
-              <tr>
-                <th class="camera-header">Camera</th>
-                @for (giorno of giorni; track giorno) {
-                  <th class="day-header" [class.today]="isToday(giorno)">
-                    <span class="day-name">{{ giorno | date:'EEE':'':'it' }}</span>
-                    <span class="day-number">{{ giorno | date:'d' }}</span>
-                  </th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (camera of camere; track camera.id) {
-                <tr>
-                  <td class="camera-cell">
-                    <span class="camera-numero">{{ camera.numero }}</span>
-                    <span class="camera-tipo">{{ camera.tipologiaNome }}</span>
-                  </td>
-                  @for (giorno of giorni; track giorno) {
-                    <ng-container *ngIf="getCellData(camera.id!, giorno) as cellData">
-                      <td
-                        class="planning-cell"
-                        [class.today]="isToday(giorno)"
-                        [class.occupied]="cellData.prenotazione"
-                        [class.is-start]="cellData.isStart"
-                        [class.is-end]="cellData.isEnd"
-                        [class.is-middle]="cellData.isContinuation && !cellData.isEnd"
-                        [ngClass]="cellData.prenotazione ? 'stato-' + cellData.prenotazione!.stato?.toLowerCase() : ''"
-                      >
-                        @if (cellData.prenotazione) {
-                          <a
-                            [routerLink]="['/prenotazioni', cellData.prenotazione!.id]"
-                            class="booking-link"
-                            [class.is-start]="cellData.isStart"
-                            [class.is-end]="cellData.isEnd"
-                            [title]="getTooltip(cellData.prenotazione!)"
-                          >
-                            @if (cellData.isStart) {
-                              <span class="booking-indicator">▶</span>
-                            }
-                            <span class="booking-name">{{ cellData.prenotazione!.nominativoTitolare || 'Prenotato' }}</span>
-                            @if (cellData.isEnd) {
-                              <span class="booking-indicator">◀</span>
-                            }
-                          </a>
-                        } @else {
-                          <a
-                            [routerLink]="['/prenotazioni/nuova']"
-                            [queryParams]="{cameraId: camera.id, checkIn: formatDate(giorno)}"
-                            class="empty-cell"
-                            title="Clicca per prenotare camera {{ camera.numero }} il {{ giorno | date:'d/MM' }}"
-                          >
-                            <span class="empty-icon">+</span>
-                          </a>
-                        }
-                      </td>
-                    </ng-container>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
+      <!-- Legenda -->
+      <div class="legenda">
+        <span class="legenda-title">LEGENDA:</span>
+        <span class="legenda-item">
+          <span class="box blu"></span> Confermata (arrivo previsto)
+        </span>
+        <span class="legenda-item">
+          <span class="box verde"></span> In corso (ospite in camera)
+        </span>
+        <span class="legenda-item">
+          <span class="box grigio"></span> Completata
+        </span>
+        <span class="legenda-item">
+          <span class="box rosso"></span> Cancellata
+        </span>
+        <span class="legenda-item">
+          <span class="box vuoto"></span> Libera
+        </span>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading">
+        Caricamento in corso...
+      </div>
+
+      <!-- Errore -->
+      <div *ngIf="error" class="errore">
+        {{ error }}
+      </div>
+
+      <!-- Tabella Planning -->
+      <div *ngIf="!loading && !error" class="tabella-wrapper">
+        <table class="tabella">
+          <thead>
+            <tr>
+              <th class="col-camera">CAMERA</th>
+              <th *ngFor="let g of giorni"
+                  class="col-giorno"
+                  [class.weekend]="isWeekend(g)"
+                  [class.oggi]="isToday(g)">
+                <div class="giorno-nome">{{ getNomeGiorno(g) }}</div>
+                <div class="giorno-num">{{ g | date:'d' }}</div>
+                <div class="giorno-mese">{{ g | date:'MMM' }}</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let camera of camere">
+              <td class="col-camera">
+                <div class="camera-num">{{ camera.numero }}</div>
+                <div class="camera-tipo">{{ camera.tipologiaNome }}</div>
+              </td>
+              <td *ngFor="let g of giorni"
+                  class="col-giorno"
+                  [class.weekend]="isWeekend(g)"
+                  [class.oggi]="isToday(g)"
+                  [class.occupata]="getPrenotazione(camera.id!, g)"
+                  [class.stato-confermata]="getStato(camera.id!, g) === 'CONFERMATA'"
+                  [class.stato-incorso]="getStato(camera.id!, g) === 'IN_CORSO'"
+                  [class.stato-completata]="getStato(camera.id!, g) === 'COMPLETATA'"
+                  [class.stato-cancellata]="getStato(camera.id!, g) === 'CANCELLATA'">
+                <a *ngIf="getPrenotazione(camera.id!, g) as pren"
+                   [routerLink]="['/prenotazioni', pren.id]"
+                   class="cella-prenotata"
+                   [title]="pren.nominativoTitolare + ' - ' + pren.stato">
+                  <span *ngIf="isInizio(camera.id!, g)" class="nome-ospite">
+                    {{ pren.nominativoTitolare || 'Ospite' }}
+                  </span>
+                </a>
+                <a *ngIf="!getPrenotazione(camera.id!, g)"
+                   [routerLink]="['/prenotazioni/nuova']"
+                   [queryParams]="{cameraId: camera.id, checkIn: formatDate(g)}"
+                   class="cella-libera"
+                   title="Clicca per prenotare">
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Riepilogo -->
+      <div *ngIf="!loading && !error" class="riepilogo">
+        <div class="box-stat">
+          <div class="stat-valore">{{ camere.length }}</div>
+          <div class="stat-label">Camere</div>
         </div>
-      }
+        <div class="box-stat">
+          <div class="stat-valore">{{ contaPrenotazioni() }}</div>
+          <div class="stat-label">Prenotazioni nel periodo</div>
+        </div>
+        <div class="box-stat">
+          <div class="stat-valore">{{ calcolaOccupazione() }}%</div>
+          <div class="stat-label">Tasso occupazione</div>
+        </div>
+      </div>
+
+      <!-- Istruzioni -->
+      <div class="istruzioni">
+        <strong>Come usare il planning:</strong>
+        <ul>
+          <li>Ogni riga rappresenta una camera</li>
+          <li>Ogni colonna rappresenta un giorno</li>
+          <li>Le celle colorate indicano prenotazioni - clicca per vedere i dettagli</li>
+          <li>Le celle vuote sono disponibili - clicca per creare una nuova prenotazione</li>
+          <li>I weekend (Sab-Dom) hanno sfondo giallo</li>
+        </ul>
+      </div>
     </div>
   `,
   styles: [`
-    .planning-container {
-      padding: 2rem;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    .container {
+      padding: 20px;
+      background: #f5f5f5;
       min-height: 100vh;
     }
 
-    .page-header {
+    /* Header */
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
-      padding: 1.5rem 2rem;
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(79, 172, 254, 0.3);
-      flex-wrap: wrap;
-      gap: 1rem;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .page-title {
-      color: white;
-      font-size: 1.75rem;
-      font-weight: 700;
+    .header h1 {
       margin: 0;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 24px;
+      color: #333;
     }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
+    .subtitle {
+      margin: 5px 0 0 0;
+      color: #666;
+      font-size: 14px;
     }
 
-    .date-navigation {
+    .header-right {
       display: flex;
-      gap: 0.5rem;
+      gap: 10px;
     }
 
     .btn {
-      padding: 0.6rem 1.2rem;
-      border: none;
-      border-radius: 10px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-decoration: none;
-    }
-
-    .btn-secondary {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      backdrop-filter: blur(10px);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255,255,255,0.35);
-      transform: translateY(-2px);
-    }
-
-    .btn-outline {
+      padding: 10px 20px;
+      border: 1px solid #ddd;
       background: white;
-      color: #4facfe;
-      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
     }
 
-    .btn-outline:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 20px rgba(255,255,255,0.4);
+    .btn:hover {
+      background: #f0f0f0;
     }
 
-    .period-info {
-      font-weight: 700;
+    .btn-primary {
+      background: #2563eb;
       color: white;
-      padding: 0.6rem 1.25rem;
-      background: rgba(255,255,255,0.2);
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
+      border-color: #2563eb;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    /* Periodo */
+    .periodo {
+      background: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     /* Legenda */
-    .legend {
+    .legenda {
       display: flex;
-      gap: 3rem;
-      margin-bottom: 1.5rem;
-      padding: 1.25rem 1.5rem;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
       flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+      background: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .legend-section {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .legend-title {
-      font-size: 0.8rem;
+    .legenda-title {
       font-weight: 700;
       color: #333;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
-    .legend-items {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .legend-item {
+    .legenda-item {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: #666;
+      gap: 8px;
+      font-size: 13px;
+      color: #555;
     }
 
-    .legend-color {
-      width: 18px;
-      height: 18px;
+    .box {
+      width: 20px;
+      height: 20px;
       border-radius: 4px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      border: 1px solid #ccc;
     }
 
-    .legend-symbol {
-      width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      font-weight: bold;
-      color: #667eea;
-    }
+    .box.blu { background: #3b82f6; border-color: #3b82f6; }
+    .box.verde { background: #22c55e; border-color: #22c55e; }
+    .box.grigio { background: #9ca3af; border-color: #9ca3af; }
+    .box.rosso { background: #ef4444; border-color: #ef4444; }
+    .box.vuoto { background: white; }
 
-    .legend-symbol.legend-empty {
-      background: #f0f0f0;
-      border-radius: 4px;
-      color: #11998e;
-    }
-
-    .legend-confermata { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-    .legend-in_corso { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-    .legend-completata { background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%); }
-    .legend-cancellata { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); }
-
-    /* Griglia */
-    .planning-grid-wrapper {
-      overflow-x: auto;
+    /* Loading e Errore */
+    .loading, .errore {
       background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      padding: 40px;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 15px;
     }
 
-    .planning-grid {
+    .errore {
+      color: #dc2626;
+      background: #fef2f2;
+    }
+
+    /* Tabella */
+    .tabella-wrapper {
+      background: white;
+      border-radius: 8px;
+      overflow-x: auto;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+    }
+
+    .tabella {
       width: 100%;
       border-collapse: collapse;
-      min-width: 900px;
+      min-width: 1000px;
     }
 
-    .planning-grid th,
-    .planning-grid td {
-      border: 1px solid #e8e8e8;
+    .tabella th,
+    .tabella td {
+      border: 1px solid #e0e0e0;
       text-align: center;
+      vertical-align: middle;
     }
 
-    /* Header camere */
-    .camera-header {
+    /* Colonna Camera */
+    .col-camera {
       width: 140px;
       min-width: 140px;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 12px;
+      background: #1e293b;
       color: white;
-      padding: 1rem;
-      font-weight: 700;
-      position: sticky;
-      left: 0;
-      z-index: 2;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-size: 0.85rem;
-    }
-
-    /* Header giorni */
-    .day-header {
-      padding: 0.75rem 0.5rem;
-      background: #f8f9fa;
-      min-width: 85px;
-      transition: all 0.3s ease;
-    }
-
-    .day-header.today {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .day-name {
-      display: block;
-      font-size: 0.7rem;
-      text-transform: uppercase;
       font-weight: 600;
-      letter-spacing: 0.5px;
-      opacity: 0.8;
-    }
-
-    .day-number {
-      display: block;
-      font-size: 1.25rem;
-      font-weight: 800;
-      margin-top: 0.15rem;
-    }
-
-    /* Celle camere */
-    .camera-cell {
-      background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-      padding: 0.75rem;
-      text-align: left;
       position: sticky;
       left: 0;
-      z-index: 1;
-      border-right: 2px solid #e0e0e0;
+      z-index: 10;
     }
 
-    .camera-numero {
-      display: block;
-      font-weight: 800;
-      color: #1a1a2e;
-      font-size: 1.1rem;
+    tbody .col-camera {
+      background: #f8fafc;
+      color: #333;
+      text-align: left;
+      border-right: 2px solid #1e293b;
+    }
+
+    .camera-num {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
     }
 
     .camera-tipo {
-      display: block;
-      font-size: 0.7rem;
-      color: #888;
-      font-weight: 500;
+      font-size: 11px;
+      color: #64748b;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
     }
 
-    /* Celle planning */
-    .planning-cell {
-      padding: 0;
-      height: 55px;
-      position: relative;
+    /* Colonne Giorni */
+    .col-giorno {
+      width: 70px;
+      min-width: 70px;
+      height: 60px;
+      padding: 8px 4px;
       background: white;
-      transition: all 0.2s ease;
     }
 
-    .planning-cell.today {
-      background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%);
+    th.col-giorno {
+      background: #f1f5f9;
+      height: auto;
     }
 
-    .planning-cell.occupied {
-      padding: 0;
+    th.col-giorno.weekend {
+      background: #fef3c7;
     }
 
-    .planning-cell.stato-confermata {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    th.col-giorno.oggi {
+      background: #dbeafe;
     }
 
-    .planning-cell.stato-in_corso {
-      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    td.col-giorno.weekend {
+      background: #fffbeb;
     }
 
-    .planning-cell.stato-completata {
-      background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
+    td.col-giorno.oggi {
+      background: #eff6ff;
     }
 
-    .planning-cell.stato-cancellata {
-      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-      opacity: 0.6;
+    .giorno-nome {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #64748b;
+      font-weight: 600;
     }
 
+    .giorno-num {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1e293b;
+    }
 
-    .booking-link {
+    .giorno-mese {
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    th.col-giorno.oggi .giorno-num {
+      color: #2563eb;
+    }
+
+    /* Celle occupate */
+    td.occupata {
+      padding: 4px;
+    }
+
+    td.stato-confermata { background: #3b82f6 !important; }
+    td.stato-incorso { background: #22c55e !important; }
+    td.stato-completata { background: #9ca3af !important; }
+    td.stato-cancellata { background: #fca5a5 !important; }
+
+    .cella-prenotata {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
       height: 100%;
-      color: white;
+      min-height: 48px;
       text-decoration: none;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0.25rem 0.5rem;
+    }
+
+    .nome-ospite {
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-      gap: 0.25rem;
-      transition: all 0.2s ease;
+      padding: 0 4px;
     }
 
-    .booking-link:hover {
-      filter: brightness(1.1);
-      transform: scaleY(1.1);
-    }
-
-    .booking-name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
-
-    .booking-indicator {
-      font-size: 0.6rem;
-      opacity: 0.9;
-      flex-shrink: 0;
-    }
-
-    .planning-cell.is-start .booking-link {
-      border-top-left-radius: 6px;
-      border-bottom-left-radius: 6px;
-      padding-left: 0.5rem;
-    }
-
-    .planning-cell.is-end .booking-link {
-      border-top-right-radius: 6px;
-      border-bottom-right-radius: 6px;
-      padding-right: 0.5rem;
-    }
-
-    .planning-cell.is-middle .booking-link {
-      border-radius: 0;
-    }
-
-    .empty-cell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .cella-libera {
+      display: block;
       width: 100%;
       height: 100%;
-      color: #ccc;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      background: transparent;
+      min-height: 48px;
     }
 
-    .empty-icon {
-      font-size: 1.25rem;
-      font-weight: 300;
-      opacity: 0.5;
-      transition: all 0.3s ease;
+    .cella-libera:hover {
+      background: #dcfce7;
     }
 
-    .empty-cell:hover {
-      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-    }
-
-    .empty-cell:hover .empty-icon {
-      color: #11998e;
-      opacity: 1;
-      transform: scale(1.3);
-      font-weight: 700;
-    }
-
-    /* Stili per le celle occupate - bordi collegati */
-    .planning-cell.occupied {
-      border-top: 3px solid transparent;
-      border-bottom: 3px solid transparent;
-    }
-
-    .planning-cell.is-start {
-      border-left: none;
-    }
-
-    .planning-cell.is-end {
-      border-right: none;
-    }
-
-    .planning-cell.is-middle {
-      border-left: none;
-      border-right: none;
-    }
-
-    .loading-container {
+    /* Riepilogo */
+    .riepilogo {
       display: flex;
-      justify-content: center;
-      padding: 4rem;
+      gap: 15px;
+      margin-bottom: 15px;
     }
 
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #4facfe;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    .box-stat {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .stat-valore {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1e293b;
     }
 
-    .alert-error {
-      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-      color: white;
-      padding: 1rem 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(238, 90, 90, 0.3);
+    .stat-label {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-top: 5px;
     }
 
-    @media (max-width: 768px) {
-      .planning-container {
-        padding: 1rem;
-      }
+    /* Istruzioni */
+    .istruzioni {
+      background: #e0f2fe;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #7dd3fc;
+    }
 
-      .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+    .istruzioni strong {
+      color: #0369a1;
+    }
 
-      .header-actions {
-        flex-direction: column;
-        width: 100%;
-        gap: 0.75rem;
-      }
+    .istruzioni ul {
+      margin: 10px 0 0 0;
+      padding-left: 20px;
+      color: #0c4a6e;
+    }
 
-      .date-navigation {
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      .legend {
-        flex-direction: column;
-        gap: 1rem;
-      }
-
-      .legend-items {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
+    .istruzioni li {
+      margin: 5px 0;
     }
   `]
 })
@@ -603,7 +470,6 @@ export class PlanningComponent implements OnInit {
   loading = true;
   error = '';
 
-  // Mappa per lookup rapido: cameraId -> data -> prenotazione
   private prenotazioniMap = new Map<number, Map<string, Prenotazione>>();
 
   constructor(
@@ -612,30 +478,8 @@ export class PlanningComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.impostaSettimana(new Date());
+    this.vaiAOggi();
     this.loadCamere();
-  }
-
-  impostaSettimana(data: Date): void {
-    // Inizia dalla data specificata
-    this.dataInizio = new Date(data);
-    this.dataInizio.setHours(0, 0, 0, 0);
-
-    // 14 giorni di visualizzazione
-    this.dataFine = new Date(this.dataInizio);
-    this.dataFine.setDate(this.dataFine.getDate() + 13);
-
-    this.generaGiorni();
-    this.loadPlanning();
-  }
-
-  generaGiorni(): void {
-    this.giorni = [];
-    const current = new Date(this.dataInizio);
-    while (current <= this.dataFine) {
-      this.giorni.push(new Date(current));
-      current.setDate(current.getDate() + 1);
-    }
   }
 
   loadCamere(): void {
@@ -643,9 +487,7 @@ export class PlanningComponent implements OnInit {
       next: (camere) => {
         this.camere = camere.sort((a, b) => a.numero.localeCompare(b.numero));
       },
-      error: (err) => {
-        console.error('Errore caricamento camere', err);
-      }
+      error: (err) => console.error('Errore caricamento camere', err)
     });
   }
 
@@ -653,10 +495,10 @@ export class PlanningComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    const da = this.formatDate(this.dataInizio);
-    const a = this.formatDate(this.dataFine);
-
-    this.dashboardService.getPlanning(da, a).subscribe({
+    this.dashboardService.getPlanning(
+      this.formatDate(this.dataInizio),
+      this.formatDate(this.dataFine)
+    ).subscribe({
       next: (planning) => {
         this.planning = planning;
         this.buildPrenotazioniMap();
@@ -678,46 +520,57 @@ export class PlanningComponent implements OnInit {
     for (const giorno of this.planning.giorni) {
       if (!giorno.prenotazioni) continue;
 
-      for (const prenotazione of giorno.prenotazioni) {
-        if (!prenotazione.cameraId) continue;
+      for (const pren of giorno.prenotazioni) {
+        if (!pren.cameraId) continue;
 
-        // Per ogni giorno della prenotazione, aggiungiamo alla mappa
-        const checkIn = new Date(prenotazione.dataCheckin);
-        const checkOut = new Date(prenotazione.dataCheckout);
-
+        const checkIn = new Date(pren.dataCheckin);
+        const checkOut = new Date(pren.dataCheckout);
         const current = new Date(checkIn);
+
         while (current < checkOut) {
-          const dateKey = this.formatDate(current);
-
-          if (!this.prenotazioniMap.has(prenotazione.cameraId)) {
-            this.prenotazioniMap.set(prenotazione.cameraId, new Map());
+          const key = this.formatDate(current);
+          if (!this.prenotazioniMap.has(pren.cameraId)) {
+            this.prenotazioniMap.set(pren.cameraId, new Map());
           }
-
-          this.prenotazioniMap.get(prenotazione.cameraId)!.set(dateKey, prenotazione);
+          this.prenotazioniMap.get(pren.cameraId)!.set(key, pren);
           current.setDate(current.getDate() + 1);
         }
       }
     }
   }
 
-  getCellData(cameraId: number, giorno: Date): CellData {
-    const dateKey = this.formatDate(giorno);
-    const cameraMap = this.prenotazioniMap.get(cameraId);
-    const prenotazione = cameraMap?.get(dateKey) || null;
+  impostaPeriodo(data: Date): void {
+    this.dataInizio = new Date(data);
+    this.dataInizio.setHours(0, 0, 0, 0);
 
-    if (!prenotazione) {
-      return { prenotazione: null, isStart: false, isEnd: false, isContinuation: false };
+    this.dataFine = new Date(this.dataInizio);
+    this.dataFine.setDate(this.dataFine.getDate() + 13);
+
+    // Genera array giorni
+    this.giorni = [];
+    const current = new Date(this.dataInizio);
+    while (current <= this.dataFine) {
+      this.giorni.push(new Date(current));
+      current.setDate(current.getDate() + 1);
     }
 
-    const checkIn = new Date(prenotazione.dataCheckin);
-    const checkOut = new Date(prenotazione.dataCheckout);
-    checkOut.setDate(checkOut.getDate() - 1); // L'ultimo giorno è il giorno prima del checkout
+    this.loadPlanning();
+  }
 
-    const isStart = this.formatDate(giorno) === this.formatDate(checkIn);
-    const isEnd = this.formatDate(giorno) === this.formatDate(checkOut);
-    const isContinuation = !isStart;
+  getPrenotazione(cameraId: number, giorno: Date): Prenotazione | null {
+    const map = this.prenotazioniMap.get(cameraId);
+    return map?.get(this.formatDate(giorno)) || null;
+  }
 
-    return { prenotazione, isStart, isEnd, isContinuation };
+  getStato(cameraId: number, giorno: Date): string | null {
+    const pren = this.getPrenotazione(cameraId, giorno);
+    return pren?.stato || null;
+  }
+
+  isInizio(cameraId: number, giorno: Date): boolean {
+    const pren = this.getPrenotazione(cameraId, giorno);
+    if (!pren) return false;
+    return this.formatDate(giorno) === pren.dataCheckin;
   }
 
   isToday(date: Date): boolean {
@@ -727,32 +580,61 @@ export class PlanningComponent implements OnInit {
            date.getFullYear() === today.getFullYear();
   }
 
-  formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  isWeekend(date: Date): boolean {
+    const day = date.getDay();
+    return day === 0 || day === 6;
   }
 
-  getTooltip(prenotazione: Prenotazione): string {
-    const nome = prenotazione.nominativoTitolare || 'N/D';
-    const stato = prenotazione.stato?.replace('_', ' ') || '';
-    return `👤 ${nome}\n📅 Check-in: ${prenotazione.dataCheckin}\n📅 Check-out: ${prenotazione.dataCheckout}\n📌 Stato: ${stato}`;
+  getNomeGiorno(date: Date): string {
+    const nomi = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+    return nomi[date.getDay()];
+  }
+
+  formatDate(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  contaPrenotazioni(): number {
+    const ids = new Set<number>();
+    this.prenotazioniMap.forEach(m => m.forEach(p => {
+      if (p.id) ids.add(p.id);
+    }));
+    return ids.size;
+  }
+
+  calcolaOccupazione(): number {
+    if (!this.camere.length || !this.giorni.length) return 0;
+
+    let occupate = 0;
+    const totale = this.camere.length * this.giorni.length;
+
+    this.camere.forEach(camera => {
+      this.giorni.forEach(giorno => {
+        if (this.getPrenotazione(camera.id!, giorno)) {
+          occupate++;
+        }
+      });
+    });
+
+    return Math.round((occupate / totale) * 100);
   }
 
   settimanaPrec(): void {
-    const nuovaData = new Date(this.dataInizio);
-    nuovaData.setDate(nuovaData.getDate() - 14);
-    this.impostaSettimana(nuovaData);
+    const d = new Date(this.dataInizio);
+    d.setDate(d.getDate() - 14);
+    this.impostaPeriodo(d);
   }
 
   settimanaSucc(): void {
-    const nuovaData = new Date(this.dataInizio);
-    nuovaData.setDate(nuovaData.getDate() + 14);
-    this.impostaSettimana(nuovaData);
+    const d = new Date(this.dataInizio);
+    d.setDate(d.getDate() + 14);
+    this.impostaPeriodo(d);
   }
 
   vaiAOggi(): void {
-    this.impostaSettimana(new Date());
+    this.impostaPeriodo(new Date());
   }
 }
