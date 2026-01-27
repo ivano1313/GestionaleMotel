@@ -84,7 +84,7 @@ npm test                          # Unit tests (Karma/Jasmine)
 - **DBMS:** MariaDB 10.x (compatibile MySQL)
 - **Connection:** `jdbc:mysql://localhost:3306/gestionale`
 - **Dev credentials:** root / changeme_root
-- **Migrations:** Flyway in `backend/src/main/resources/db/migration/` (V1-V21)
+- **Migrations:** Flyway in `backend/src/main/resources/db/migration/` (V1-V22)
 - **Schema changes:** Create new `V{n}__description.sql` file, never modify existing
 
 ### Setup Docker (WSL2 senza Docker Desktop)
@@ -186,6 +186,24 @@ Il `GlobalExceptionHandler` gestisce tutte le eccezioni in modo centralizzato.
 ## API Reference
 
 See `backend/RIEPILOGO_API.md` for complete endpoint documentation.
+
+## Roadmap / TODO
+
+Funzionalità future da implementare:
+
+| Funzionalità | Priorità | Stato | Note |
+|--------------|----------|-------|------|
+| **Contabilità base** | Media | Da fare | Tracciare entrate e uscite, bilancio mensile |
+| Registro spese/uscite | Media | Da fare | Spese operative, utenze, manutenzione |
+| Report incassi | Media | Da fare | Per periodo, per metodo di pagamento |
+| Tipo pagamento (Acconto/Saldo/Caparra) | Bassa | Da fare | Per ora usare campo note |
+| Export dati per commercialista | Bassa | Da fare | CSV/Excel con movimenti |
+| Integrazione POS | Bassa | Non prevista | Motel piccolo, POS esterno sufficiente |
+
+**Note tecniche:**
+- Per gli acconti usare il campo `note` del pagamento (es. "Acconto", "Caparra", "Saldo")
+- Il POS resta separato (SumUp o simile), i pagamenti si registrano manualmente
+- La contabilità completa richiederà nuove entità: `Spesa`, `CategoriaSpesa`, `MovimentoCassa`
 
 ## Ultimo Commit
 

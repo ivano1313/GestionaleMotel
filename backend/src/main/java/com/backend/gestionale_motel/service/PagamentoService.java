@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,6 +63,7 @@ public class PagamentoService {
                 .prenotazione(prenotazione)
                 .metodoPagamento(metodo)
                 .importo(dto.getImporto())
+                .dataPagamento(LocalDateTime.now())
                 .build();
 
         Pagamento saved = pagamentoRepository.save(pagamento);
