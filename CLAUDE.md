@@ -186,3 +186,17 @@ Il `GlobalExceptionHandler` gestisce tutte le eccezioni in modo centralizzato.
 ## API Reference
 
 See `backend/RIEPILOGO_API.md` for complete endpoint documentation.
+
+## Ultimo Commit
+
+| Campo | Valore |
+|-------|--------|
+| **Hash** | `649abd6` |
+| **Data/Ora** | 2026-01-27 16:39:32 +0100 |
+| **Messaggio** | Migliora gestione errori e aggiunge Docker Compose |
+
+**Modifiche incluse:**
+- Docker Compose per MariaDB
+- GlobalExceptionHandler con messaggi user-friendly
+- Migrazione V21 (rimozione UNIQUE su periodo_tariffario.nome)
+- Documentazione ambienti e gestione eccezioni
