@@ -209,12 +209,11 @@ Funzionalità future da implementare:
 
 | Campo | Valore |
 |-------|--------|
-| **Hash** | `649abd6` |
-| **Data/Ora** | 2026-01-27 16:39:32 +0100 |
-| **Messaggio** | Migliora gestione errori e aggiunge Docker Compose |
+| **Hash** | `5dd29f5` |
+| **Data/Ora** | 2026-01-27 18:08:58 +0100 |
+| **Messaggio** | Aggiunge metodi di pagamento e fix registrazione pagamenti |
 
 **Modifiche incluse:**
-- Docker Compose per MariaDB
-- GlobalExceptionHandler con messaggi user-friendly
-- Migrazione V21 (rimozione UNIQUE su periodo_tariffario.nome)
-- Documentazione ambienti e gestione eccezioni
+- Migrazione V22: metodi di pagamento standard
+- Fix PagamentoService: dataPagamento impostata correttamente
+- Roadmap/TODO per contabilità futura
