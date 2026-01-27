@@ -8,6 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Full-stack hotel/motel management system (Gestionale Motel) for small-to-medium Italian accommodation businesses. Manages bookings, rooms, guests, pricing, and payments.
 
+## Ambienti
+
+| Ambiente | Sistema | Database | Note |
+|----------|---------|----------|------|
+| **Sviluppo** | WSL2 (Ubuntu) | MariaDB in Docker | Container gestito con Docker Engine |
+| **Produzione** | Windows | MariaDB in Docker | PC locale, Docker Compose per tutto lo stack |
+
 ## Architecture
 
 ```
@@ -18,8 +25,8 @@ Full-stack hotel/motel management system (Gestionale Motel) for small-to-medium 
                                                      │
                                                      ▼
                                           ┌─────────────────────┐
-                                          │  MySQL 8.x          │
-                                          │  gestionale_motel   │
+                                          │  MariaDB 10.x       │
+                                          │  gestionale   │
                                           └─────────────────────┘
 ```
 
@@ -31,16 +38,29 @@ See `backend/CLAUDE.md` and `frontend/CLAUDE.md` for component-specific details.
 
 ## Quick Start
 
-**Prerequisites:** Java 21, Node.js, MySQL 8.x
+### Sviluppo (WSL2)
+
+**Prerequisites:** Java 21, Node.js, Docker
 
 ```bash
-# Start MySQL with database 'gestionale_motel'
+# 1. Avvia Docker e MariaDB
+sudo service docker start
+docker start mariadb-motel  # se già creato, altrimenti vedi "Setup Docker"
 
-# Terminal 1 - Backend (port 8080)
+# 2. Backend (port 8080)
 cd backend && ./mvnw spring-boot:run
 
-# Terminal 2 - Frontend (port 4200)
+# 3. Frontend (port 4200)
 cd frontend && npm install && npm start
+```
+
+### Produzione (Windows)
+
+**Prerequisites:** Docker Desktop per Windows (o Docker Engine)
+
+```bash
+# Avvia tutto lo stack con Docker Compose
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## Build Commands
@@ -61,10 +81,59 @@ npm test                          # Unit tests (Karma/Jasmine)
 
 ## Database
 
-- **Connection:** `jdbc:mysql://localhost:3306/gestionale_motel`
+- **DBMS:** MariaDB 10.x (compatibile MySQL)
+- **Connection:** `jdbc:mysql://localhost:3306/gestionale`
 - **Dev credentials:** root / changeme_root
-- **Migrations:** Flyway in `backend/src/main/resources/db/migration/` (V1-V19)
+- **Migrations:** Flyway in `backend/src/main/resources/db/migration/` (V1-V21)
 - **Schema changes:** Create new `V{n}__description.sql` file, never modify existing
+
+### Setup Docker (WSL2 senza Docker Desktop)
+```bash
+# Installa Docker Engine
+sudo apt update && sudo apt install docker.io docker-compose
+
+# Avvia Docker
+sudo service docker start
+
+# (Opzionale) Permetti uso senza sudo
+sudo usermod -aG docker $USER
+```
+
+### Avvio MariaDB con Docker
+```bash
+# Avvia container MariaDB
+docker run -d --name mariadb-motel \
+  -e MYSQL_ROOT_PASSWORD=changeme_root \
+  -e MYSQL_DATABASE=gestionale \
+  -p 3306:3306 \
+  mariadb:10
+
+# Oppure usa docker-compose (consigliato)
+docker-compose up -d
+```
+
+### Gestione Docker e Volumi
+
+| Comando | Effetto sui dati |
+|---------|------------------|
+| `docker-compose up -d` | Avvia container (dati preservati) |
+| `docker-compose down` | Ferma container (dati preservati) |
+| `docker-compose down -v` | Ferma e **CANCELLA** tutti i dati |
+| `docker start mariadb-motel` | Riavvia container esistente |
+| `docker stop mariadb-motel` | Ferma container |
+
+**Volume dati:** `gestionale_motel_db`
+
+**Attenzione:** Non usare mai `-v` se vuoi mantenere i dati del database.
+
+## Profili di Configurazione
+
+| Profilo | File | Uso |
+|---------|------|-----|
+| **default** | `application.properties` | Sviluppo locale |
+| **prod** | `application-prod.properties` | Produzione Windows |
+
+Attivare profilo: `--spring.profiles.active=prod`
 
 ## Authentication
 
@@ -89,6 +158,30 @@ npm test                          # Unit tests (Karma/Jasmine)
 - **Soft delete:** `attivo` boolean flag for logical deletion
 - **DTOs:** Never expose JPA entities in REST responses
 - **Flyway:** All schema changes via migrations, `ddl-auto=validate`
+
+## Gestione Eccezioni
+
+Il `GlobalExceptionHandler` gestisce tutte le eccezioni in modo centralizzato.
+
+**Principi di sicurezza:**
+- Mai esporre dettagli tecnici (SQL, stacktrace) all'utente
+- Messaggi di errore sempre in italiano e user-friendly
+- Dettagli tecnici loggati solo lato server per debug
+
+**Tipi di eccezioni gestite:**
+
+| Eccezione | HTTP Status | Uso |
+|-----------|-------------|-----|
+| `ResourceNotFoundException` | 404 | Risorsa non trovata |
+| `BusinessException` | 400 | Violazione regole di business |
+| `DataIntegrityViolationException` | 409 | Vincoli DB (UNIQUE, FK) |
+| `MethodArgumentNotValidException` | 400 | Validazione fallita |
+| `Exception` (catch-all) | 500 | Errori generici (messaggio generico) |
+
+**Esempio messaggi utente:**
+- "Esiste già una camera con questo numero."
+- "Impossibile eliminare: esistono prenotazioni associate."
+- "Si è verificato un errore interno del server."
 
 ## API Reference
 

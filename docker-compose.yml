@@ -1,0 +1,29 @@
+# Docker Compose per Gestionale Motel - Sviluppo
+# Avvia con: docker-compose up -d
+# Ferma con: docker-compose down
+
+services:
+  # Database MariaDB
+  mariadb:
+    image: mariadb:10
+    container_name: mariadb-motel
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme_root
+      MYSQL_DATABASE: gestionale
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Volume persistente per i dati del database
+volumes:
+  mariadb_data:
+    name: gestionale_motel_db
