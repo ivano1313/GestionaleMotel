@@ -112,6 +112,20 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
+  // Spese
+  {
+    path: 'spese',
+    loadComponent: () => import('./features/spese/spese-list/spese-list.component').then(m => m.SpeseListComponent),
+    canActivate: [authGuard]
+  },
+
+  // Categorie Spesa
+  {
+    path: 'categorie-spesa',
+    loadComponent: () => import('./features/spese/categorie-spesa-list/categorie-spesa-list.component').then(m => m.CategorieSpesaListComponent),
+    canActivate: [authGuard]
+  },
+
   // Fallback: redirect a dashboard
   {
     path: '**',

@@ -82,6 +82,8 @@ npm test                      # Test unitari
 | Ospite | Anagrafica, documento, cittadinanza |
 | Tariffa | Prezzo per tipologia + periodo |
 | Pagamento | Importo, metodo, data |
+| CategoriaSpesa | Categoria per classificare le spese |
+| Spesa | Uscite operative (utenze, manutenzione, ecc.) |
 
 ## Conventions
 

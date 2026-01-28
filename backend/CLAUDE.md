@@ -33,16 +33,16 @@ java -jar target/gestionale-motel-0.0.1-SNAPSHOT.jar
 ```
 src/main/java/com/backend/gestionale_motel/
 ├── config/          # Configurazioni Spring Security e JWT
-├── controller/      # 14 REST Controller
-├── service/         # 15 Service (logica business)
-├── repository/      # 14 Repository JPA
-├── entity/          # 18 Entity JPA
-├── dto/             # 20 DTO
+├── controller/      # 16 REST Controller
+├── service/         # 17 Service (logica business)
+├── repository/      # 16 Repository JPA
+├── entity/          # 20 Entity JPA
+├── dto/             # 22 DTO
 └── exception/       # Gestione eccezioni centralizzata
 
 src/main/resources/
 ├── application.properties
-└── db/migration/    # 17 script Flyway (V1-V17)
+└── db/migration/    # 25 script Flyway (V1-V25)
 ```
 
 ## Architettura
@@ -66,6 +66,8 @@ Entity JPA + MySQL
 | `TipologiaCamera` | Nome, capienza massima |
 | `PeriodoTariffario` | Date inizio/fine, nome |
 | `Pagamento` | Importo, metodo, data |
+| `CategoriaSpesa` | Categoria per classificare le spese |
+| `Spesa` | Uscite operative (utenze, manutenzione, ecc.) |
 | `Configurazione` | Parametri sistema (singleton id=1) |
 
 ## Enum
@@ -89,6 +91,9 @@ Entity JPA + MySQL
 | `GET /api/tariffe/calcola-prezzo` | Calcolo prezzo soggiorno |
 | `GET /api/dashboard` | Statistiche giornaliere |
 | `GET /api/dashboard/planning` | Planning prenotazioni |
+| `GET/POST /api/categorie-spesa` | CRUD categorie spesa |
+| `GET/POST /api/spese` | CRUD spese/uscite |
+| `GET /api/spese/totale` | Totale spese per periodo |
 
 ## Convenzioni di Codice
 - **Lingua**: Italiano per nomi entità, variabili e commenti

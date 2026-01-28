@@ -10,6 +10,7 @@ export * from './ospite.model';
 export * from './camera.model';
 export * from './tariffa.model';
 export * from './pagamento.model';
+export * from './spesa.model';
 export * from './configurazione.model';
 export * from './dashboard.model';
 

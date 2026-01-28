@@ -22,6 +22,7 @@ export class AppComponent {
     { path: '/tipologie', label: 'Tipologie', icon: 'layers' },
     { path: '/tariffe', label: 'Tariffe', icon: 'euro' },
     { path: '/periodi', label: 'Periodi', icon: 'calendar-range' },
+    { path: '/spese', label: 'Spese', icon: 'wallet' },
     { path: '/configurazione', label: 'Configurazione', icon: 'settings' }
   ];
 

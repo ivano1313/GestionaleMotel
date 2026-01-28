@@ -13,6 +13,8 @@ export * from './tariffa.service';
 export * from './periodo-tariffario.service';
 export * from './pagamento.service';
 export * from './metodo-pagamento.service';
+export * from './categoria-spesa.service';
+export * from './spesa.service';
 export * from './ospite-prenotazione.service';
 export * from './configurazione.service';
 
