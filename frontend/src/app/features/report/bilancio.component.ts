@@ -459,7 +459,22 @@ export class BilancioComponent implements OnInit {
 
   exportCsv(): void {
     if (!this.filtroDa || !this.filtroA) return;
-    const url = this.reportService.getExportCsvUrl(this.filtroDa, this.filtroA);
-    window.open(url, '_blank');
+
+    this.reportService.exportCsv(this.filtroDa, this.filtroA).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `movimenti_${this.filtroDa}_${this.filtroA}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Errore export CSV', err);
+        alert('Errore durante l\'export del CSV');
+      }
+    });
   }
 }

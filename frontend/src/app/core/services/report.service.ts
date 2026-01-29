@@ -26,7 +26,13 @@ export class ReportService {
     return this.http.get<Bilancio>(`${this.baseUrl}/bilancio`, { params });
   }
 
-  getExportCsvUrl(da: string, a: string): string {
-    return `${this.baseUrl}/export/csv?da=${da}&a=${a}`;
+  exportCsv(da: string, a: string): Observable<Blob> {
+    const params = new HttpParams()
+      .set('da', da)
+      .set('a', a);
+    return this.http.get(`${this.baseUrl}/export/csv`, {
+      params,
+      responseType: 'blob'
+    });
   }
 }
