@@ -23,6 +23,7 @@ export class AppComponent {
     { path: '/tariffe', label: 'Tariffe', icon: 'euro' },
     { path: '/periodi', label: 'Periodi', icon: 'calendar-range' },
     { path: '/spese', label: 'Spese', icon: 'wallet' },
+    { path: '/report-incassi', label: 'Report Incassi', icon: 'chart' },
     { path: '/configurazione', label: 'Configurazione', icon: 'settings' }
   ];
 

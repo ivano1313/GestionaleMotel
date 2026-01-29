@@ -126,6 +126,13 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
+  // Report Incassi
+  {
+    path: 'report-incassi',
+    loadComponent: () => import('./features/report/report-incassi.component').then(m => m.ReportIncassiComponent),
+    canActivate: [authGuard]
+  },
+
   // Fallback: redirect a dashboard
   {
     path: '**',

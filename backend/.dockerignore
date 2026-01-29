@@ -1,0 +1,6 @@
+# File di configurazione Docker
+docker-compose.yml
+Dockerfile
+
+# Dati del database Docker
+mariadb_data/

@@ -17,5 +17,8 @@ export * from './dashboard.model';
 // Lookup
 export * from './lookup.model';
 
+// Report
+export * from './report.model';
+
 // Error
 export * from './error.model';

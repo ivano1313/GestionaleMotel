@@ -18,6 +18,9 @@ export * from './spesa.service';
 export * from './ospite-prenotazione.service';
 export * from './configurazione.service';
 
+// Report
+export * from './report.service';
+
 // Lookup services
 export * from './comune.service';
 export * from './stato.service';
