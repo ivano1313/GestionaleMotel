@@ -76,5 +76,13 @@ public interface PrenotazioneRepository extends JpaRepository<Prenotazione, Long
      * @return lista di prenotazioni nel range
      */
     List<Prenotazione> findByDataCheckinBetween(LocalDate da, LocalDate a);
+
+    /**
+     * Trova prenotazioni per data check-in e lista di stati
+     * @param dataCheckin la data di check-in
+     * @param stati lista di stati da includere
+     * @return lista di prenotazioni corrispondenti
+     */
+    List<Prenotazione> findByDataCheckinAndStatoIn(LocalDate dataCheckin, List<StatoPrenotazione> stati);
 }
 

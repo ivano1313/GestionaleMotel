@@ -140,6 +140,13 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
+  // Alloggiati Web (Polizia di Stato)
+  {
+    path: 'alloggiati',
+    loadComponent: () => import('./features/alloggiati/alloggiati.component').then(m => m.AlloggiatiComponent),
+    canActivate: [authGuard]
+  },
+
   // Fallback: redirect a dashboard
   {
     path: '**',

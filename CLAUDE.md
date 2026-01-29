@@ -105,6 +105,7 @@ npm test                      # Test unitari
 - **Report Incassi** - Per periodo e metodo pagamento
 - **Bilancio** - Entrate vs uscite con saldo
 - **Export CSV** - Movimenti per commercialista
+- **Alloggiati Web** - Export TXT per Portale Polizia di Stato
 
 ## Conventions
 

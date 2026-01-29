@@ -25,6 +25,7 @@ export class AppComponent {
     { path: '/spese', label: 'Spese', icon: 'wallet' },
     { path: '/report-incassi', label: 'Report Incassi', icon: 'chart' },
     { path: '/bilancio', label: 'Bilancio', icon: 'scale' },
+    { path: '/alloggiati', label: 'Alloggiati PS', icon: 'shield' },
     { path: '/configurazione', label: 'Configurazione', icon: 'settings' }
   ];
 

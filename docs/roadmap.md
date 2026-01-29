@@ -17,6 +17,7 @@ Possibili evoluzioni future del sistema.
 | Bilancio entrate/uscite | Gennaio 2026 |
 | Export CSV per commercialista | Gennaio 2026 |
 | Tipo pagamento (Acconto/Caparra/Saldo) | Gennaio 2026 |
+| Export Alloggiati Web (PS) | Gennaio 2026 |
 
 ## Possibili Evoluzioni Future
 

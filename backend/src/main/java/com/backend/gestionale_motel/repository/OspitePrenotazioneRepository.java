@@ -45,5 +45,12 @@ public interface OspitePrenotazioneRepository extends JpaRepository<OspitePrenot
      * @return numero di ospiti
      */
     long countByPrenotazione(Prenotazione prenotazione);
+
+    /**
+     * Trova tutti gli ospiti associati a una prenotazione, ordinati per titolare (titolare prima)
+     * @param prenotazione la prenotazione
+     * @return lista di associazioni ospite-prenotazione ordinate
+     */
+    List<OspitePrenotazione> findByPrenotazioneOrderByTitolareDesc(Prenotazione prenotazione);
 }
 

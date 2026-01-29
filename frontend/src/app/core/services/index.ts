@@ -25,3 +25,6 @@ export * from './report.service';
 export * from './comune.service';
 export * from './stato.service';
 export * from './tipo-documento.service';
+
+// Alloggiati Web (Polizia di Stato)
+export * from './alloggiati.service';
