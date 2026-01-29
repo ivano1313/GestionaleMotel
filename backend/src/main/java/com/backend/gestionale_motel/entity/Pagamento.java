@@ -41,5 +41,10 @@ public class Pagamento {
     @CreationTimestamp
     @Column(name = "data_pagamento", nullable = false, updatable = false)
     private LocalDateTime dataPagamento;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_pagamento", length = 20)
+    @Builder.Default
+    private TipoPagamento tipoPagamento = TipoPagamento.SALDO;
 }
 

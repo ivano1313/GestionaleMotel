@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.backend.gestionale_motel.entity.TipoPagamento;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -34,6 +36,7 @@ public class PagamentoDTO {
     private BigDecimal importo;
 
     private LocalDateTime dataPagamento;
-    private String note;
+
+    private TipoPagamento tipoPagamento;
 }
 

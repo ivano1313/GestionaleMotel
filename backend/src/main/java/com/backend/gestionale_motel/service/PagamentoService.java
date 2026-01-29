@@ -4,6 +4,7 @@ import com.backend.gestionale_motel.dto.PagamentoDTO;
 import com.backend.gestionale_motel.entity.MetodoPagamento;
 import com.backend.gestionale_motel.entity.Pagamento;
 import com.backend.gestionale_motel.entity.Prenotazione;
+import com.backend.gestionale_motel.entity.TipoPagamento;
 import com.backend.gestionale_motel.exception.ResourceNotFoundException;
 import com.backend.gestionale_motel.repository.MetodoPagamentoRepository;
 import com.backend.gestionale_motel.repository.PagamentoRepository;
@@ -64,6 +65,7 @@ public class PagamentoService {
                 .metodoPagamento(metodo)
                 .importo(dto.getImporto())
                 .dataPagamento(LocalDateTime.now())
+                .tipoPagamento(dto.getTipoPagamento() != null ? dto.getTipoPagamento() : TipoPagamento.SALDO)
                 .build();
 
         Pagamento saved = pagamentoRepository.save(pagamento);
@@ -78,6 +80,7 @@ public class PagamentoService {
                 .metodoPagamentoNome(entity.getMetodoPagamento().getNome())
                 .importo(entity.getImporto())
                 .dataPagamento(entity.getDataPagamento())
+                .tipoPagamento(entity.getTipoPagamento())
                 .build();
     }
 }

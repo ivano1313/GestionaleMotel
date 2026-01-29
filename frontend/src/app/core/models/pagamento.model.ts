@@ -1,3 +1,5 @@
+import { TipoPagamento } from './enums';
+
 export interface Pagamento {
   id?: number;
   prenotazioneId: number;
@@ -5,7 +7,7 @@ export interface Pagamento {
   metodoPagamentoNome?: string;
   importo: number;
   dataPagamento?: string;
-  note?: string;
+  tipoPagamento?: TipoPagamento;
 }
 
 export interface MetodoPagamento {

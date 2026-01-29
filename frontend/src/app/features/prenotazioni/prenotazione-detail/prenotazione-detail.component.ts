@@ -15,7 +15,8 @@ import {
   Pagamento,
   MetodoPagamento,
   Ospite,
-  StatoPrenotazione
+  StatoPrenotazione,
+  TipoPagamento
 } from '../../../core/models';
 
 @Component({
@@ -166,6 +167,9 @@ import {
                   <div class="pagamento-info">
                     <span class="pagamento-importo">{{ pag.importo | currency:'EUR' }}</span>
                     <span class="pagamento-metodo">{{ pag.metodoPagamentoNome }}</span>
+                    <span class="badge badge-tipo" [ngClass]="'badge-' + pag.tipoPagamento?.toLowerCase()">
+                      {{ pag.tipoPagamento }}
+                    </span>
                   </div>
                   <span class="pagamento-data">{{ pag.dataPagamento | date:'dd/MM/yyyy HH:mm' }}</span>
                 </div>
@@ -242,12 +246,12 @@ import {
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>Note</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="nuovoPagamento.note"
-                    placeholder="Note opzionali..."
-                  >
+                  <label>Tipo Pagamento *</label>
+                  <select [(ngModel)]="nuovoPagamento.tipoPagamento">
+                    <option [ngValue]="TipoPagamento.SALDO">Saldo</option>
+                    <option [ngValue]="TipoPagamento.ACCONTO">Acconto</option>
+                    <option [ngValue]="TipoPagamento.CAPARRA">Caparra</option>
+                  </select>
                 </div>
               </div>
               <div class="modal-footer">
@@ -423,6 +427,14 @@ import {
     .badge-completata { background: #e2e3e5; color: #383d41; }
     .badge-cancellata { background: #f8d7da; color: #721c24; }
     .badge-titolare { background: #667eea; color: white; font-size: 0.7rem; }
+
+    .badge-tipo {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+    }
+    .badge-saldo { background: #28a745; color: white; }
+    .badge-acconto { background: #ffc107; color: #333; }
+    .badge-caparra { background: #17a2b8; color: white; }
 
     .ospiti-list, .pagamenti-list {
       display: flex;
@@ -733,10 +745,11 @@ export class PrenotazioneDetailComponent implements OnInit {
   ospitiTrovati: Ospite[] = [];
 
   // Nuovo pagamento
-  nuovoPagamento: Partial<Pagamento> = { importo: 0, metodoPagamentoId: undefined, note: '' };
+  nuovoPagamento: Partial<Pagamento> = { importo: 0, metodoPagamentoId: undefined, tipoPagamento: TipoPagamento.SALDO };
 
   // Espongo enum per template
   StatoPrenotazione = StatoPrenotazione;
+  TipoPagamento = TipoPagamento;
 
   constructor(
     private route: ActivatedRoute,
@@ -898,13 +911,13 @@ export class PrenotazioneDetailComponent implements OnInit {
       prenotazioneId: this.prenotazione.id,
       importo: this.nuovoPagamento.importo,
       metodoPagamentoId: this.nuovoPagamento.metodoPagamentoId,
-      note: this.nuovoPagamento.note
+      tipoPagamento: this.nuovoPagamento.tipoPagamento
     };
 
     this.pagamentoService.create(this.prenotazione.id, pagamento).subscribe({
       next: () => {
         this.showAddPagamento = false;
-        this.nuovoPagamento = { importo: 0, metodoPagamentoId: undefined, note: '' };
+        this.nuovoPagamento = { importo: 0, metodoPagamentoId: undefined, tipoPagamento: TipoPagamento.SALDO };
         this.loadPagamenti(this.prenotazione!.id!);
       },
       error: (err) => console.error('Errore salvataggio pagamento', err)

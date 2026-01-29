@@ -20,3 +20,9 @@ export enum Ruolo {
   RECEPTIONIST = 'RECEPTIONIST',
   PULIZIE = 'PULIZIE'
 }
+
+export enum TipoPagamento {
+  ACCONTO = 'ACCONTO',
+  CAPARRA = 'CAPARRA',
+  SALDO = 'SALDO'
+}
