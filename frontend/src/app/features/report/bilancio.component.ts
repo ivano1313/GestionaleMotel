@@ -27,6 +27,10 @@ import { Bilancio, IncassoPerMetodo, UscitaPerCategoria } from '../../core/model
         <button class="btn btn-sm btn-outline" (click)="setMeseCorrente()">Mese corrente</button>
         <button class="btn btn-sm btn-outline" (click)="setMesePrecedente()">Mese precedente</button>
         <button class="btn btn-sm btn-outline" (click)="setAnnoCorrente()">Anno corrente</button>
+        <div class="spacer"></div>
+        <button class="btn btn-sm btn-export" (click)="exportCsv()" [disabled]="!filtroDa || !filtroA">
+          Esporta CSV
+        </button>
       </div>
 
       @if (loading) {
@@ -319,6 +323,26 @@ import { Bilancio, IncassoPerMetodo, UscitaPerCategoria } from '../../core/model
       font-size: 0.8rem;
     }
 
+    .btn-export {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      border: none;
+    }
+
+    .btn-export:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+    }
+
+    .btn-export:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
     .loading-container {
       display: flex;
       justify-content: center;
@@ -431,5 +455,11 @@ export class BilancioComponent implements OnInit {
   getPercentualeUscita(totale: number): number {
     if (!this.bilancio || this.bilancio.totaleUscite === 0) return 0;
     return (totale / this.bilancio.totaleUscite) * 100;
+  }
+
+  exportCsv(): void {
+    if (!this.filtroDa || !this.filtroA) return;
+    const url = this.reportService.getExportCsvUrl(this.filtroDa, this.filtroA);
+    window.open(url, '_blank');
   }
 }

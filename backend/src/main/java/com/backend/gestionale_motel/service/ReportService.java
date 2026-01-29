@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -181,4 +184,117 @@ public class ReportService {
                 .uscitePerCategoria(uscitePerCategoria)
                 .build();
     }
+
+    /**
+     * Esporta i movimenti (entrate e uscite) in formato CSV
+     * @param da data di inizio periodo
+     * @param a data di fine periodo
+     * @return stringa CSV con tutti i movimenti
+     */
+    public String exportMovimentiCsv(LocalDate da, LocalDate a) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        StringBuilder csv = new StringBuilder();
+
+        // Header
+        csv.append("Data;Tipo;Categoria;Descrizione;Importo;Note\n");
+
+        // Lista movimenti unificata
+        List<MovimentoCsv> movimenti = new ArrayList<>();
+
+        // Aggiungi entrate (pagamenti)
+        LocalDateTime inizioPeriodo = da.atStartOfDay();
+        LocalDateTime finePeriodo = a.plusDays(1).atStartOfDay();
+        List<Pagamento> pagamenti = pagamentoRepository.findByDataPagamentoBetween(inizioPeriodo, finePeriodo);
+
+        for (Pagamento p : pagamenti) {
+            String camera = p.getPrenotazione().getCamera() != null
+                    ? p.getPrenotazione().getCamera().getNumero()
+                    : "-";
+            String descrizione = "Pagamento camera " + camera;
+
+            movimenti.add(new MovimentoCsv(
+                    p.getDataPagamento().toLocalDate(),
+                    p.getDataPagamento().format(dateTimeFormatter),
+                    "ENTRATA",
+                    p.getMetodoPagamento().getNome(),
+                    descrizione,
+                    p.getImporto(),
+                    ""
+            ));
+        }
+
+        // Aggiungi uscite (spese)
+        List<Spesa> spese = spesaRepository.findByDataSpesaBetweenAndAttivoTrueOrderByDataSpesaDesc(da, a);
+
+        for (Spesa s : spese) {
+            movimenti.add(new MovimentoCsv(
+                    s.getDataSpesa(),
+                    s.getDataSpesa().format(dateFormatter),
+                    "USCITA",
+                    s.getCategoria().getNome(),
+                    s.getDescrizione(),
+                    s.getImporto().negate(),
+                    s.getNote() != null ? s.getNote() : ""
+            ));
+        }
+
+        // Ordina per data
+        movimenti.sort(Comparator.comparing(MovimentoCsv::data));
+
+        // Scrivi righe CSV
+        for (MovimentoCsv m : movimenti) {
+            csv.append(escapeCsv(m.dataFormattata())).append(";");
+            csv.append(escapeCsv(m.tipo())).append(";");
+            csv.append(escapeCsv(m.categoria())).append(";");
+            csv.append(escapeCsv(m.descrizione())).append(";");
+            csv.append(m.importo().toString().replace(".", ",")).append(";");
+            csv.append(escapeCsv(m.note())).append("\n");
+        }
+
+        // Aggiungi riga totali
+        BigDecimal totaleEntrate = movimenti.stream()
+                .filter(m -> "ENTRATA".equals(m.tipo()))
+                .map(MovimentoCsv::importo)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totaleUscite = movimenti.stream()
+                .filter(m -> "USCITA".equals(m.tipo()))
+                .map(m -> m.importo().abs())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal saldo = totaleEntrate.subtract(totaleUscite);
+
+        csv.append("\n");
+        csv.append(";;TOTALE ENTRATE;;").append(totaleEntrate.toString().replace(".", ",")).append(";\n");
+        csv.append(";;TOTALE USCITE;;-").append(totaleUscite.toString().replace(".", ",")).append(";\n");
+        csv.append(";;SALDO;;").append(saldo.toString().replace(".", ",")).append(";\n");
+
+        return csv.toString();
+    }
+
+    /**
+     * Escape per valori CSV (gestisce punto e virgola e virgolette)
+     */
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        if (value.contains(";") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
+
+    /**
+     * Record per rappresentare un movimento nel CSV
+     */
+    private record MovimentoCsv(
+            LocalDate data,
+            String dataFormattata,
+            String tipo,
+            String categoria,
+            String descrizione,
+            BigDecimal importo,
+            String note
+    ) {}
 }

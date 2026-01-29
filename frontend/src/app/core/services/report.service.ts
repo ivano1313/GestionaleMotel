@@ -25,4 +25,8 @@ export class ReportService {
       .set('a', a);
     return this.http.get<Bilancio>(`${this.baseUrl}/bilancio`, { params });
   }
+
+  getExportCsvUrl(da: string, a: string): string {
+    return `${this.baseUrl}/export/csv?da=${da}&a=${a}`;
+  }
 }

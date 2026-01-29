@@ -15,7 +15,7 @@ Funzionalità future da implementare.
 | Funzionalità | Stato | Note |
 |--------------|-------|------|
 | Tipo pagamento (Acconto/Saldo/Caparra) | Da fare | Per ora usare campo note |
-| Export dati per commercialista | Da fare | CSV/Excel con movimenti |
+| Export dati per commercialista | ✅ Fatto | CSV con movimenti entrate/uscite |
 
 ## Non Previste
 
