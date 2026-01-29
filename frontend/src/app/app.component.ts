@@ -24,6 +24,7 @@ export class AppComponent {
     { path: '/periodi', label: 'Periodi', icon: 'calendar-range' },
     { path: '/spese', label: 'Spese', icon: 'wallet' },
     { path: '/report-incassi', label: 'Report Incassi', icon: 'chart' },
+    { path: '/bilancio', label: 'Bilancio', icon: 'scale' },
     { path: '/configurazione', label: 'Configurazione', icon: 'settings' }
   ];
 

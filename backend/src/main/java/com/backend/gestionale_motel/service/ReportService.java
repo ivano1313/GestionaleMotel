@@ -1,10 +1,14 @@
 package com.backend.gestionale_motel.service;
 
+import com.backend.gestionale_motel.dto.BilancioDTO;
 import com.backend.gestionale_motel.dto.IncassoPerMetodoDTO;
 import com.backend.gestionale_motel.dto.PagamentoReportDTO;
 import com.backend.gestionale_motel.dto.ReportIncassiDTO;
+import com.backend.gestionale_motel.dto.UscitaPerCategoriaDTO;
 import com.backend.gestionale_motel.entity.Pagamento;
+import com.backend.gestionale_motel.entity.Spesa;
 import com.backend.gestionale_motel.repository.PagamentoRepository;
+import com.backend.gestionale_motel.repository.SpesaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,7 @@ import java.util.stream.Collectors;
 public class ReportService {
 
     private final PagamentoRepository pagamentoRepository;
+    private final SpesaRepository spesaRepository;
 
     /**
      * Genera il report degli incassi per un periodo specificato
@@ -92,6 +97,88 @@ public class ReportService {
                 .importo(pagamento.getImporto())
                 .metodo(pagamento.getMetodoPagamento().getNome())
                 .camera(numeroCamera)
+                .build();
+    }
+
+    /**
+     * Genera il bilancio entrate/uscite per un periodo specificato
+     * @param da data di inizio periodo
+     * @param a data di fine periodo
+     * @return bilancio con totale entrate, uscite, saldo e breakdown
+     */
+    public BilancioDTO getBilancio(LocalDate da, LocalDate a) {
+        // Calcola entrate (pagamenti)
+        LocalDateTime inizioPeriodo = da.atStartOfDay();
+        LocalDateTime finePeriodo = a.plusDays(1).atStartOfDay();
+
+        List<Pagamento> pagamenti = pagamentoRepository.findByDataPagamentoBetween(inizioPeriodo, finePeriodo);
+
+        BigDecimal totaleEntrate = pagamenti.stream()
+                .map(Pagamento::getImporto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Aggrega entrate per metodo di pagamento
+        Map<Long, List<Pagamento>> pagamentiPerMetodo = pagamenti.stream()
+                .collect(Collectors.groupingBy(p -> p.getMetodoPagamento().getId()));
+
+        List<IncassoPerMetodoDTO> entratePerMetodo = pagamentiPerMetodo.entrySet().stream()
+                .map(entry -> {
+                    List<Pagamento> pagamentiMetodo = entry.getValue();
+                    Pagamento primo = pagamentiMetodo.get(0);
+                    BigDecimal totaleMetodo = pagamentiMetodo.stream()
+                            .map(Pagamento::getImporto)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    return IncassoPerMetodoDTO.builder()
+                            .metodoId(entry.getKey())
+                            .metodoNome(primo.getMetodoPagamento().getNome())
+                            .totale(totaleMetodo)
+                            .numeroPagamenti(pagamentiMetodo.size())
+                            .build();
+                })
+                .sorted((a1, a2) -> a2.getTotale().compareTo(a1.getTotale()))
+                .collect(Collectors.toList());
+
+        // Calcola uscite (spese)
+        List<Spesa> spese = spesaRepository.findByDataSpesaBetweenAndAttivoTrueOrderByDataSpesaDesc(da, a);
+
+        BigDecimal totaleUscite = spese.stream()
+                .map(Spesa::getImporto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Aggrega uscite per categoria
+        Map<Long, List<Spesa>> spesePerCategoria = spese.stream()
+                .collect(Collectors.groupingBy(s -> s.getCategoria().getId()));
+
+        List<UscitaPerCategoriaDTO> uscitePerCategoria = spesePerCategoria.entrySet().stream()
+                .map(entry -> {
+                    List<Spesa> speseCategoria = entry.getValue();
+                    Spesa prima = speseCategoria.get(0);
+                    BigDecimal totaleCategoria = speseCategoria.stream()
+                            .map(Spesa::getImporto)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    return UscitaPerCategoriaDTO.builder()
+                            .categoriaId(entry.getKey())
+                            .categoriaNome(prima.getCategoria().getNome())
+                            .totale(totaleCategoria)
+                            .numeroSpese(speseCategoria.size())
+                            .build();
+                })
+                .sorted((u1, u2) -> u2.getTotale().compareTo(u1.getTotale()))
+                .collect(Collectors.toList());
+
+        // Calcola saldo
+        BigDecimal saldo = totaleEntrate.subtract(totaleUscite);
+
+        return BilancioDTO.builder()
+                .dataDa(da)
+                .dataA(a)
+                .totaleEntrate(totaleEntrate)
+                .totaleUscite(totaleUscite)
+                .saldo(saldo)
+                .entratePerMetodo(entratePerMetodo)
+                .uscitePerCategoria(uscitePerCategoria)
                 .build();
     }
 }

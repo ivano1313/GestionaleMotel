@@ -6,7 +6,7 @@ Funzionalità future da implementare.
 
 | Funzionalità | Stato | Note |
 |--------------|-------|------|
-| Contabilità base | Da fare | Tracciare entrate e uscite, bilancio mensile |
+| Contabilità base | ✅ Fatto | Tracciare entrate e uscite, bilancio mensile |
 | Registro spese/uscite | ✅ Fatto | Spese operative, utenze, manutenzione |
 | Report incassi | ✅ Fatto | Per periodo, per metodo di pagamento |
 

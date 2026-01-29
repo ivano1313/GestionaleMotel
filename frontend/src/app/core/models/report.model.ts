@@ -20,3 +20,20 @@ export interface ReportIncassi {
   incassiPerMetodo: IncassoPerMetodo[];
   pagamenti: PagamentoReport[];
 }
+
+export interface UscitaPerCategoria {
+  categoriaId: number;
+  categoriaNome: string;
+  totale: number;
+  numeroSpese: number;
+}
+
+export interface Bilancio {
+  dataDa: string;
+  dataA: string;
+  totaleEntrate: number;
+  totaleUscite: number;
+  saldo: number;
+  entratePerMetodo: IncassoPerMetodo[];
+  uscitePerCategoria: UscitaPerCategoria[];
+}

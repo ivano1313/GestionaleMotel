@@ -133,6 +133,13 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
+  // Bilancio
+  {
+    path: 'bilancio',
+    loadComponent: () => import('./features/report/bilancio.component').then(m => m.BilancioComponent),
+    canActivate: [authGuard]
+  },
+
   // Fallback: redirect a dashboard
   {
     path: '**',
