@@ -97,6 +97,14 @@ import { Prenotazione, StatoPrenotazione } from '../../../core/models';
                           Check-out
                         </button>
                       }
+                      @if (prenotazione.stato !== 'CANCELLATA' && prenotazione.stato !== 'COMPLETATA') {
+                        <button
+                          class="btn btn-sm btn-danger"
+                          (click)="cancellaPrenotazione(prenotazione)"
+                        >
+                          Cancella
+                        </button>
+                      }
                     </div>
                   </td>
                 </tr>
@@ -285,6 +293,16 @@ import { Prenotazione, StatoPrenotazione } from '../../../core/models';
       color: white;
     }
 
+    .btn-danger {
+      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(235, 51, 73, 0.4);
+    }
+
     .btn-sm {
       padding: 0.5rem 0.9rem;
       font-size: 0.8rem;
@@ -466,5 +484,13 @@ export class PrenotazioniListComponent implements OnInit {
         alert('Errore nel cambio stato');
       }
     });
+  }
+
+  cancellaPrenotazione(prenotazione: Prenotazione): void {
+    if (!prenotazione.id) return;
+
+    if (confirm(`Vuoi cancellare la prenotazione della camera ${prenotazione.cameraNumero}?`)) {
+      this.cambiaStato(prenotazione, StatoPrenotazione.CANCELLATA);
+    }
   }
 }
