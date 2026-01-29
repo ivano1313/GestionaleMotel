@@ -4,7 +4,7 @@
 
 ## Project Overview
 
-Gestionale Motel - sistema full-stack per hotel/motel italiani di piccole-medie dimensioni. Gestisce prenotazioni, camere, ospiti, tariffe e pagamenti.
+Gestionale Motel - sistema full-stack per hotel/motel italiani di piccole-medie dimensioni. Gestisce prenotazioni, camere, ospiti, tariffe, pagamenti, spese e reportistica.
 
 ## Ambienti
 
@@ -81,13 +81,35 @@ npm test                      # Test unitari
 | Camera | Numero, tipologia, stato pulizia |
 | Ospite | Anagrafica, documento, cittadinanza |
 | Tariffa | Prezzo per tipologia + periodo |
-| Pagamento | Importo, metodo, data |
+| Pagamento | Importo, metodo, tipo (ACCONTO/CAPARRA/SALDO) |
 | CategoriaSpesa | Categoria per classificare le spese |
 | Spesa | Uscite operative (utenze, manutenzione, ecc.) |
+
+## Enums
+
+| Enum | Valori |
+|------|--------|
+| StatoPrenotazione | CONFERMATA, IN_CORSO, COMPLETATA, CANCELLATA |
+| StatoPulizia | PULITA, DA_PULIRE |
+| TipoPagamento | ACCONTO, CAPARRA, SALDO |
+
+## Funzionalità Principali
+
+- **Dashboard** - Arrivi/partenze del giorno, camere da pulire
+- **Planning** - Griglia visuale camere x date
+- **Prenotazioni** - CRUD con gestione stati e pagamenti
+- **Ospiti** - Anagrafica con dati documento
+- **Camere** - Inventario e stato pulizia
+- **Tariffe** - Prezzi dinamici per tipologia e periodo
+- **Spese** - Registro uscite per categoria
+- **Report Incassi** - Per periodo e metodo pagamento
+- **Bilancio** - Entrate vs uscite con saldo
+- **Export CSV** - Movimenti per commercialista
 
 ## Conventions
 
 - **Lingua:** Italiano per nomi, variabili, commenti
+- **Date:** Formato dd/MM/yyyy nel frontend
 - **Soft delete:** Flag `attivo` per cancellazione logica
 - **DTOs:** Mai esporre Entity JPA nei controller
 - **Eccezioni:** Messaggi user-friendly, mai esporre SQL

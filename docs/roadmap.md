@@ -1,35 +1,43 @@
-# Roadmap / TODO
+# Roadmap
 
-Funzionalità future da implementare.
+Possibili evoluzioni future del sistema.
 
-## Priorità Media
+## Funzionalità Completate
 
-| Funzionalità | Stato | Note |
-|--------------|-------|------|
-| Contabilità base | ✅ Fatto | Tracciare entrate e uscite, bilancio mensile |
-| Registro spese/uscite | ✅ Fatto | Spese operative, utenze, manutenzione |
-| Report incassi | ✅ Fatto | Per periodo, per metodo di pagamento |
+| Funzionalità | Data |
+|--------------|------|
+| Gestione prenotazioni | v1.0 |
+| Gestione camere e tipologie | v1.0 |
+| Gestione ospiti | v1.0 |
+| Tariffe dinamiche | v1.0 |
+| Dashboard operativa | v1.0 |
+| Planning visuale | v1.0 |
+| Registro spese/uscite | Gennaio 2026 |
+| Report incassi | Gennaio 2026 |
+| Bilancio entrate/uscite | Gennaio 2026 |
+| Export CSV per commercialista | Gennaio 2026 |
+| Tipo pagamento (Acconto/Caparra/Saldo) | Gennaio 2026 |
 
-## Priorità Bassa
+## Possibili Evoluzioni Future
 
-| Funzionalità | Stato | Note |
-|--------------|-------|------|
-| Tipo pagamento (Acconto/Saldo/Caparra) | ✅ Fatto | Campo dedicato con enum |
-| Export dati per commercialista | ✅ Fatto | CSV con movimenti entrate/uscite |
+| Funzionalità | Priorità | Descrizione |
+|--------------|----------|-------------|
+| Statistiche avanzate | Media | Occupazione media, revenue per camera, trend |
+| Notifiche email | Media | Alert per arrivi/partenze, promemoria |
+| Multi-utente con ruoli | Bassa | Permessi differenziati (admin, receptionist) |
+| Backup automatico | Bassa | Export periodico schedulato |
+| Storico prezzi | Bassa | Tracciare variazioni tariffe nel tempo |
+| App mobile | Bassa | Versione responsive o PWA |
 
 ## Non Previste
 
 | Funzionalità | Motivo |
 |--------------|--------|
 | Integrazione POS | Motel piccolo, POS esterno sufficiente (SumUp) |
+| Channel manager | Complessità eccessiva, prenotazioni manuali |
+| Fatturazione elettronica | Gestita da commercialista esterno |
 
-## Note Tecniche
+## Note
 
-- Il POS resta separato, i pagamenti si registrano manualmente
-- Tipo pagamento gestito con enum: ACCONTO, CAPARRA, SALDO
-
-## Decisioni Tecniche Prese
-
-1. **POS esterno:** Per un motel piccolo, il POS resta separato (SumUp o simile). I pagamenti si registrano manualmente nel gestionale.
-
-2. **Tipo pagamento:** Implementato con enum (ACCONTO, CAPARRA, SALDO) e campo dedicato nel database.
+Il sistema è completo per le esigenze di un motel di piccole-medie dimensioni.
+Le evoluzioni future verranno valutate in base alle necessità operative.
