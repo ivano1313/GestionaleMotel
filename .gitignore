@@ -17,3 +17,27 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
+
+# MCP credentials (se presenti)
+.mcp-credentials/
+
+# SSL Certificates (produzione)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# Backup database
+backup/*.sql
+backup/*.gz
+
+# Build artifacts
+backend/target/
+frontend/dist/
+frontend/.angular/
+
+# Node modules
+frontend/node_modules/
+
+# Playwright
+.playwright-mcp/

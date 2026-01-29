@@ -1,0 +1,109 @@
+# =============================================
+# Docker Compose - Gestionale Motel PRODUZIONE
+# =============================================
+# Uso:
+#   1. Copia .env.example in .env e configura le variabili
+#   2. docker-compose -f docker-compose.prod.yml up -d
+# =============================================
+
+services:
+  # =============================================
+  # Database MariaDB
+  # =============================================
+  mariadb:
+    image: mariadb:10
+    container_name: gestionale-motel-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-gestionale}
+      MYSQL_USER: ${DB_USERNAME:-gestionale_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./backup:/backup
+    networks:
+      - gestionale-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Porta NON esposta all'esterno (solo rete interna)
+
+  # =============================================
+  # Backend Spring Boot
+  # =============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gestionale-motel-backend
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      # Database
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-gestionale}
+      DB_USERNAME: ${DB_USERNAME:-gestionale_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://localhost}
+      # Server
+      SERVER_PORT: 8080
+      # Logging
+      LOG_PATH: /var/log/gestionale-motel
+    volumes:
+      - backend_logs:/var/log/gestionale-motel
+    networks:
+      - gestionale-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    # Porta NON esposta all'esterno (solo rete interna)
+
+  # =============================================
+  # Nginx - Reverse Proxy + Frontend
+  # =============================================
+  nginx:
+    image: nginx:alpine
+    container_name: gestionale-motel-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./frontend/dist/frontend/browser:/usr/share/nginx/html:ro
+    networks:
+      - gestionale-network
+
+# =============================================
+# Rete interna
+# =============================================
+networks:
+  gestionale-network:
+    driver: bridge
+
+# =============================================
+# Volumi persistenti
+# =============================================
+volumes:
+  mariadb_data:
+    name: gestionale_motel_db_prod
+  backend_logs:
+    name: gestionale_motel_logs
