@@ -69,8 +69,8 @@ import { Prenotazione, StatoPrenotazione } from '../../../core/models';
                     <strong>{{ prenotazione.cameraNumero }}</strong>
                   </td>
                   <td>{{ prenotazione.nominativoTitolare || 'N/D' }}</td>
-                  <td>{{ prenotazione.dataCheckin }}</td>
-                  <td>{{ prenotazione.dataCheckout }}</td>
+                  <td>{{ prenotazione.dataCheckin | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ prenotazione.dataCheckout | date:'dd/MM/yyyy' }}</td>
                   <td>
                     <span class="badge" [ngClass]="getBadgeClass(prenotazione.stato)">
                       {{ formatStato(prenotazione.stato) }}

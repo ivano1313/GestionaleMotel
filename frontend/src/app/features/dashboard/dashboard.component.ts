@@ -89,7 +89,7 @@ import { Dashboard, Prenotazione, Camera, StatoPulizia } from '../../core/models
                       <span class="booking-guest">{{ prenotazione.nominativoTitolare || 'N/D' }}</span>
                     </div>
                     <div class="booking-dates">
-                      <span>{{ prenotazione.dataCheckin }} - {{ prenotazione.dataCheckout }}</span>
+                      <span>{{ prenotazione.dataCheckin | date:'dd/MM/yyyy' }} - {{ prenotazione.dataCheckout | date:'dd/MM/yyyy' }}</span>
                     </div>
                     <span class="badge" [class]="getBadgeClass(prenotazione.stato)">
                       {{ prenotazione.stato }}
@@ -117,7 +117,7 @@ import { Dashboard, Prenotazione, Camera, StatoPulizia } from '../../core/models
                       <span class="booking-guest">{{ prenotazione.nominativoTitolare || 'N/D' }}</span>
                     </div>
                     <div class="booking-dates">
-                      <span>{{ prenotazione.dataCheckin }} - {{ prenotazione.dataCheckout }}</span>
+                      <span>{{ prenotazione.dataCheckin | date:'dd/MM/yyyy' }} - {{ prenotazione.dataCheckout | date:'dd/MM/yyyy' }}</span>
                     </div>
                     <span class="badge" [class]="getBadgeClass(prenotazione.stato)">
                       {{ prenotazione.stato }}

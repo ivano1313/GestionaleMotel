@@ -70,11 +70,11 @@ import {
               </div>
               <div class="detail-row">
                 <span class="label">Check-in</span>
-                <span class="value">{{ prenotazione.dataCheckin }}</span>
+                <span class="value">{{ prenotazione.dataCheckin | date:'dd/MM/yyyy' }}</span>
               </div>
               <div class="detail-row">
                 <span class="label">Check-out</span>
-                <span class="value">{{ prenotazione.dataCheckout }}</span>
+                <span class="value">{{ prenotazione.dataCheckout | date:'dd/MM/yyyy' }}</span>
               </div>
               <div class="detail-row">
                 <span class="label">Stato</span>
@@ -167,7 +167,7 @@ import {
                     <span class="pagamento-importo">{{ pag.importo | currency:'EUR' }}</span>
                     <span class="pagamento-metodo">{{ pag.metodoPagamentoNome }}</span>
                   </div>
-                  <span class="pagamento-data">{{ pag.dataPagamento }}</span>
+                  <span class="pagamento-data">{{ pag.dataPagamento | date:'dd/MM/yyyy HH:mm' }}</span>
                 </div>
               }
             </div>
