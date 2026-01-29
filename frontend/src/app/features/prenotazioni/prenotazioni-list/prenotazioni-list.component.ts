@@ -22,7 +22,8 @@ import { Prenotazione, StatoPrenotazione } from '../../../core/models';
           <div class="filter-group">
             <label>Stato</label>
             <select [(ngModel)]="filtroStato" (change)="applicaFiltri()">
-              <option value="">Tutti</option>
+              <option value="ATTIVE">Solo attive</option>
+              <option value="">Tutte</option>
               <option value="CONFERMATA">Confermata</option>
               <option value="IN_CORSO">In corso</option>
               <option value="COMPLETATA">Completata</option>
@@ -420,7 +421,7 @@ export class PrenotazioniListComponent implements OnInit {
   loading = true;
   error = '';
 
-  filtroStato = '';
+  filtroStato = 'ATTIVE';
   filtroRicerca = '';
   
   // Espongo l'enum per usarlo nel template
@@ -450,7 +451,12 @@ export class PrenotazioniListComponent implements OnInit {
 
   applicaFiltri(): void {
     this.prenotazioniFiltrate = this.prenotazioni.filter(p => {
-      const matchStato = !this.filtroStato || p.stato === this.filtroStato;
+      let matchStato = true;
+      if (this.filtroStato === 'ATTIVE') {
+        matchStato = p.stato === 'CONFERMATA' || p.stato === 'IN_CORSO';
+      } else if (this.filtroStato) {
+        matchStato = p.stato === this.filtroStato;
+      }
       const matchRicerca = !this.filtroRicerca ||
         p.cameraNumero?.toLowerCase().includes(this.filtroRicerca.toLowerCase()) ||
         p.nominativoTitolare?.toLowerCase().includes(this.filtroRicerca.toLowerCase());
